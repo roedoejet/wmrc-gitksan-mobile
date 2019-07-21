@@ -9,7 +9,7 @@ import { File } from '@ionic-native/file';
 import { FileTransfer, FileUploadOptions, FileTransferObject } from '@ionic-native/file-transfer';
 import { SplashScreen } from '@ionic-native/splash-screen';
 import { MyApp } from './app.component';
-import { About, Bookmarks, Browse, Flashcards, Random, Search, EntryList, WordModal, Flashcard } from '../pages'
+import { About, Bookmarks, Browse, Flashcards, Random, Search, EntryList, WordModal, Flashcard, StoriesPage, StoryPage } from '../pages'
 import { MTDService } from './mtd.service'
 import { PipesModule } from '../pipes/pipes.module'
 
@@ -25,6 +25,8 @@ import { PipesModule } from '../pipes/pipes.module'
     EntryList,
     WordModal,
     Flashcard,
+    StoriesPage,
+    StoryPage
   ],
   imports: [
     BrowserModule,
@@ -44,6 +46,8 @@ import { PipesModule } from '../pipes/pipes.module'
     EntryList,
     WordModal,
     Flashcard,
+    StoriesPage,
+    StoryPage
   ],
   providers: [{provide: ErrorHandler, useClass: IonicErrorHandler}, MTDService, File, FileTransfer, FileTransferObject, NativeAudio, SplashScreen, StatusBar]
 })

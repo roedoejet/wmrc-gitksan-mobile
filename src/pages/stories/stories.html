@@ -1,0 +1,18 @@
+<ion-header>
+  <ion-navbar>
+    <button ion-button menuToggle>
+      <ion-icon name="menu"></ion-icon>
+    </button>
+    <ion-title>Stories</ion-title>
+  </ion-navbar>
+</ion-header>
+
+<ion-content class="card-background-page">
+
+  <ion-card *ngFor="let story of stories" (click)="push(story)">
+    <img [src]="story.cover"/>
+    <div class="card-title">{{story.title}}</div>
+    <!--<div class="card-subtitle">{{story.subtitle}}</div>-->
+  </ion-card>
+
+</ion-content>

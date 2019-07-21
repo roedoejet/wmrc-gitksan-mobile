@@ -5,7 +5,7 @@ import { SplashScreen } from '@ionic-native/splash-screen';
 
 import { Storage } from '@ionic/storage';
 
-import { About, Bookmarks, Browse, Flashcards, Random, Search, } from '../pages'
+import { About, Bookmarks, Browse, Flashcards, Random, Search, StoriesPage } from '../pages'
 
 import { Entry } from '../pages/shared/entry.model'
 
@@ -35,6 +35,7 @@ export class MyApp {
       { title: 'Browse', component: Browse },
       { title: 'Pick a Random Word!', component: Random },
       { title: 'Bookmarks', component: Bookmarks },
+      { title: 'Stories', component: StoriesPage },
       { title: 'Flashcards', component: Flashcards },
       { title: 'About', component: About }
     ];
