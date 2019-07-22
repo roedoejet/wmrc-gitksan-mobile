@@ -1,8 +1,8 @@
 import { Component } from '@angular/core';
 
-import { NavController, NavParams, AlertController } from 'ionic-angular';
+import { NavController, NavParams, AlertController, Platform } from 'ionic-angular';
 
-import { NativeAudio } from '@ionic-native/native-audio'
+import { Media } from '@ionic-native/media'
 
 @Component({
     templateUrl: 'story.html'
@@ -17,7 +17,7 @@ export class StoryPage {
     storyPages: any[];
     storySlides: any[] = [];
     audio_playing = [];
-    constructor(public navParams: NavParams, public alertCtrl: AlertController, public nativeAudio: NativeAudio) {
+    constructor(public navParams: NavParams, public alertCtrl: AlertController, public audio: Media, public plt: Platform) {
         this.image = this.navParams.get('cover')
         this.title = this.navParams.get('title')
         this.subtitle = this.navParams.get('subtitle')
@@ -78,15 +78,31 @@ export class StoryPage {
     }
 
     playAudio(track) {
-        this.nativeAudio.preloadComplex(track, track, 1, 1, 0).then(
-            (success) => {
-                this.nativeAudio.play(track, (success) => this.nativeAudio.unload(track))
-            },
-            (error) => { console.log(error) });
+        if (this.plt.is('core') || this.plt.is('mobileweb')) {
+            let audio = new Audio(track)
+            this.audio_playing.push(audio)
+            audio.onended = () => {
+                this.audio_playing.pop()
+            }
+            audio.play()
+        } else {
+            let audio = this.audio.create(track)
+            this.audio_playing.push(audio)
+            audio.onStatusUpdate.subscribe((status) => {
+                if (status === 4) {
+                    this.audio_playing.pop()
+                }
+            })
+            audio.play();
+        }
     }
 
-    stopAudio(track){
-        this.nativeAudio.stop(track)
+    stopAudio(track?) {
+        if (this.plt.is('core') || this.plt.is('mobileweb')) {
+            this.audio_playing.forEach((a) => a.pause());
+        } else {
+            this.audio_playing.forEach((a) => a.stop());
+        }
     }
 }
 
