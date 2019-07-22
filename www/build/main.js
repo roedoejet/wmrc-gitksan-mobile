@@ -85,11 +85,11 @@ webpackEmptyAsyncContext.id = 158;
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return Flashcard; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_ionic_angular__ = __webpack_require__(12);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__app_mtd_service__ = __webpack_require__(28);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__app_mtd_service__ = __webpack_require__(29);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__ionic_native_file__ = __webpack_require__(105);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__ionic_native_native_audio__ = __webpack_require__(54);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__ionic_native_media__ = __webpack_require__(103);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__ionic_native_file_transfer__ = __webpack_require__(106);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__app_global__ = __webpack_require__(34);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__app_global__ = __webpack_require__(28);
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -106,8 +106,9 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 
 
 
-var Flashcard = /** @class */ (function () {
-    function Flashcard(alertCtrl, navCtrl, navParams, mtdService, viewCtrl, file, plt, transfer, nativeAudio) {
+var Flashcard = (function () {
+    function Flashcard(audio, alertCtrl, navCtrl, navParams, mtdService, viewCtrl, file, plt, transfer) {
+        this.audio = audio;
         this.alertCtrl = alertCtrl;
         this.navCtrl = navCtrl;
         this.navParams = navParams;
@@ -116,7 +117,6 @@ var Flashcard = /** @class */ (function () {
         this.file = file;
         this.plt = plt;
         this.transfer = transfer;
-        this.nativeAudio = nativeAudio;
         this.displayImages = true; //default show images, turns to false on 404
         this.startIndex = 0;
         this.audio_playing = [];
@@ -209,47 +209,84 @@ var Flashcard = /** @class */ (function () {
         });
         this.audio_playing = [];
     };
+    Flashcard.prototype.mediaPlay = function (path) {
+        var _this = this;
+        var audio = this.audio.create(path);
+        audio.onError.subscribe(function () {
+            _this.audio_playing.pop();
+            _this.onError("The audio file wasn't found.");
+        });
+        audio.onStatusUpdate.subscribe(function (status) {
+            if (status === 1) {
+                _this.audio_playing.push(audio);
+                console.log('playing');
+            }
+            if (status === 4) {
+                _this.audio_playing.pop();
+                console.log('stopped');
+            }
+        });
+        audio.play();
+    };
+    Flashcard.prototype.htmlAudioPlay = function (path) {
+        var _this = this;
+        var audio = new Audio(path);
+        audio.onerror = function () {
+            _this.audio_playing.pop();
+            _this.onError("The audio file wasn't found.");
+        };
+        audio.onended = function () {
+            _this.audio_playing.pop();
+        };
+        this.audio_playing.push(audio);
+        audio.play();
+    };
+    Flashcard.prototype.playInternal = function (path) {
+        var _this = this;
+        this.file.resolveDirectoryUrl(this.file.dataDirectory).then(function (rootdir) {
+            _this.file.getFile(rootdir, path, { create: false }).then(function (entryFile) {
+                _this.mediaPlay(entryFile.toInternalURL());
+            });
+        });
+    };
+    Flashcard.prototype.downloadAndPlay = function (external_path, internal_path) {
+        var _this = this;
+        var targetPath = this.file.dataDirectory + internal_path;
+        console.log('downloading to ' + targetPath);
+        var trustHosts = true;
+        var options = {};
+        this.fileTransfer.download(external_path, targetPath, trustHosts, options).then(function (track) {
+            _this.mediaPlay(track.toInternalURL());
+        }, function (error) { _this.onError(error); });
+    };
     Flashcard.prototype.playAudio = function (track) {
         var _this = this;
         if (track !== undefined && track.filename !== undefined) {
             // get path. add config path if it's there.
-            var path = track.filename;
+            var path_1 = track.filename;
             if (this.audio_path && this.audio_path !== undefined) {
-                path = this.audio_path + track.filename;
+                path_1 = this.audio_path + track.filename;
             }
             // set ID and path to internal storage
             var internal_path_1 = "assets/audio/" + track.filename;
-            var id_1 = track.filename;
+            var id = Date.now().toString();
             // if desktop or browser, run as HTML5 Audio
             if (this.plt.is('core') || this.plt.is('mobileweb')) {
-                var audio = new Audio(path);
-                audio.onerror = function () {
-                    _this.audio_playing.pop();
-                    _this.onError("The audio file wasn't found.");
-                };
-                this.audio_playing.push(audio);
-                audio.onended = function () { return _this.audio_playing.pop(); };
-                audio.play();
-                // If iOS or Android, download and store
+                this.htmlAudioPlay(path_1);
+                // If iOS or Android, download, store and play
             }
             else if (this.plt.is('android') || this.plt.is('ios')) {
                 this.file.checkFile(this.file.dataDirectory, internal_path_1)
-                    .then(function (_) {
-                    _this.audio_playing.push(id_1);
-                    _this.nativeAudio.preloadSimple(id_1, internal_path_1);
-                    _this.nativeAudio.play(id_1, function () { return _this.audio_playing.pop(); });
+                    .then(function (check) {
+                    if (check) {
+                        _this.playInternal(internal_path_1);
+                    }
+                    else {
+                        _this.downloadAndPlay(path_1, internal_path_1);
+                    }
                 }).catch(function (err) {
-                    var targetPath = _this.file.dataDirectory + internal_path_1;
-                    var trustHosts = true;
-                    var options = {};
-                    _this.fileTransfer.download(internal_path_1, targetPath, trustHosts, options);
-                })
-                    .then(function (track) {
-                    _this.audio_playing.push(id_1);
-                    _this.nativeAudio.preloadSimple(id_1, internal_path_1);
-                    _this.nativeAudio.play(id_1, function () { return _this.audio_playing.pop(); });
-                }, function (error) { _this.onError(error); });
-                ;
+                    _this.downloadAndPlay(path_1, internal_path_1);
+                });
             }
             else {
                 this.showAlert();
@@ -272,10 +309,10 @@ var Flashcard = /** @class */ (function () {
         Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["m" /* Component */])({
             selector: 'flashcard-modal',template:/*ion-inline-start:"/Users/pinea/wmrc-gitksan-mobile/src/pages/flashcards/flashcard-modal.component.html"*/'<ion-header>\n  <ion-toolbar>\n    <ion-buttons left>\n      <button ion-button (click)="dismiss()">\n        <ion-icon name="arrow-back"></ion-icon>\n      </button>\n    </ion-buttons>\n    <ion-title>\n      Flashcard Quiz\n    </ion-title>\n  </ion-toolbar>\n</ion-header>\n\n<ion-content ng-switch="style" on-swipe-up="front = !front">\n\n  <ion-card>\n\n    <div *ngIf="displayImages">\n      <img (click)="playAudio(card)" [(src)]="image" onError="this.src=\'assets/img/default.png\'" *ngIf="card.img" />\n    </div>\n    <ion-card-content [ngSwitch]="style">\n      <div *ngSwitchCase="\'Active\'">\n        <ion-card-title *ngIf="!front">\n          {{card.word}}\n        </ion-card-title>\n        <ion-card-title class="definition" *ngIf="front">\n          {{card.definition}}\n        </ion-card-title>\n      </div>\n      <div *ngSwitchCase="\'Passive\'">\n        <ion-card-title *ngIf="!front">\n          {{card.definition}}\n        </ion-card-title>\n        <ion-card-title class="definition" *ngIf="front">\n          {{card.word}}\n        </ion-card-title>\n      </div>\n      <div *ngSwitchCase="\'Non-Written\'">\n        <ion-card-title *ngIf="!front">\n          {{card.word}} - {{card.definition}}\n        </ion-card-title>\n      </div>\n      <div *ngIf="card.optional && optional">\n        <p class="option" *ngFor="let option of checkedOptions; let i = index">\n          {{option}} - {{card.optional[option]}}\n        </p>\n      </div>\n    </ion-card-content>\n\n    <ion-row *ngIf="(card.audio | noNullObjectValues)?.length > 0">\n      <ion-card>\n        <ion-card-header>\n          Audio\n        </ion-card-header>\n\n        <ion-list>\n          <button ion-item *ngFor="let track of (card.audio | noNullObjectValues)" (click)="playAudio(track)">\n            <ion-icon name="musical-notes" item-start></ion-icon>\n            Speaker: {{ track.speaker }}\n          </button>\n\n        </ion-list>\n      </ion-card>\n\n    </ion-row>\n\n    <ion-row *ngIf="(card.example_sentence | noNullValues)?.length > 0">\n      <ion-card>\n        <ion-card-header>\n          Sentences\n        </ion-card-header>\n\n        <ion-list *ngFor="let sentence of (card.example_sentence | noNullValues); let i = index">\n\n          <button ion-item *ngFor="let track of (card.example_sentence_audio[i] | noNullObjectValues)" (click)="playAudio(track)">\n            <ion-icon name="musical-notes" item-start></ion-icon>\n            <h2>{{ sentence }}</h2>\n            <h4>{{ card.example_sentence_definition[i] }}</h4>\n            <h6>Speaker: {{ track.speaker }}</h6>\n          </button>\n\n        </ion-list>\n      </ion-card>\n\n    </ion-row>\n\n    <ion-row no-padding>\n      <ion-col>\n        <button ion-button clear small color="primary" icon-left (click)="toggleFav(card)">\n          <ion-icon *ngIf="favourited(card)" name="ios-bookmarks"></ion-icon>\n          <ion-icon *ngIf="!favourited(card)" name="ios-bookmarks-outline"></ion-icon>\n          Bookmark\n        </button>\n        <button ion-button clear small color="primary" icon-left (click)="front = !front">\n          <ion-icon name=\'refresh\'></ion-icon>\n          <span *ngIf="front">Flip to back</span><span *ngIf="!front">Flip to front</span>\n        </button>\n      </ion-col>\n\n    </ion-row>\n\n  </ion-card>\n\n</ion-content>\n\n<ion-footer>\n  <ion-toolbar>\n    <ion-buttons left class="bar-buttons bar-buttons-ios">\n      <button ion-button icon-only (click)="prev1()">\n        <ion-icon name="ios-arrow-back" class="scroll"></ion-icon>\n      </button>\n    </ion-buttons>\n    <ion-buttons end class="bar-buttons bar-buttons-ios">\n      <button ion-button icon-only (click)="next1()">\n        <ion-icon name="ios-arrow-forward" class="scroll"></ion-icon>\n      </button>\n    </ion-buttons>\n  </ion-toolbar>\n</ion-footer>'/*ion-inline-end:"/Users/pinea/wmrc-gitksan-mobile/src/pages/flashcards/flashcard-modal.component.html"*/
         }),
-        __metadata("design:paramtypes", [typeof (_a = typeof __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["a" /* AlertController */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["a" /* AlertController */]) === "function" && _a || Object, typeof (_b = typeof __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["g" /* NavController */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["g" /* NavController */]) === "function" && _b || Object, typeof (_c = typeof __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["h" /* NavParams */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["h" /* NavParams */]) === "function" && _c || Object, typeof (_d = typeof __WEBPACK_IMPORTED_MODULE_2__app_mtd_service__["a" /* MTDService */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_2__app_mtd_service__["a" /* MTDService */]) === "function" && _d || Object, typeof (_e = typeof __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["j" /* ViewController */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["j" /* ViewController */]) === "function" && _e || Object, typeof (_f = typeof __WEBPACK_IMPORTED_MODULE_3__ionic_native_file__["a" /* File */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_3__ionic_native_file__["a" /* File */]) === "function" && _f || Object, typeof (_g = typeof __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["i" /* Platform */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["i" /* Platform */]) === "function" && _g || Object, typeof (_h = typeof __WEBPACK_IMPORTED_MODULE_5__ionic_native_file_transfer__["a" /* FileTransfer */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_5__ionic_native_file_transfer__["a" /* FileTransfer */]) === "function" && _h || Object, typeof (_j = typeof __WEBPACK_IMPORTED_MODULE_4__ionic_native_native_audio__["a" /* NativeAudio */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_4__ionic_native_native_audio__["a" /* NativeAudio */]) === "function" && _j || Object])
+        __metadata("design:paramtypes", [__WEBPACK_IMPORTED_MODULE_4__ionic_native_media__["a" /* Media */], __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["a" /* AlertController */], __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["g" /* NavController */], __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["h" /* NavParams */], __WEBPACK_IMPORTED_MODULE_2__app_mtd_service__["a" /* MTDService */],
+            __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["j" /* ViewController */], __WEBPACK_IMPORTED_MODULE_3__ionic_native_file__["a" /* File */], __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["i" /* Platform */], __WEBPACK_IMPORTED_MODULE_5__ionic_native_file_transfer__["a" /* FileTransfer */]])
     ], Flashcard);
     return Flashcard;
-    var _a, _b, _c, _d, _e, _f, _g, _h, _j;
 }());
 
 //# sourceMappingURL=flashcard-modal.component.js.map
@@ -291,10 +328,10 @@ var Flashcard = /** @class */ (function () {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_ionic_angular__ = __webpack_require__(12);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__ionic_native_file__ = __webpack_require__(105);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__ionic_native_file_transfer__ = __webpack_require__(106);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__ionic_storage__ = __webpack_require__(55);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__ionic_native_native_audio__ = __webpack_require__(54);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__app_mtd_service__ = __webpack_require__(28);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__app_global__ = __webpack_require__(34);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__ionic_storage__ = __webpack_require__(54);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__ionic_native_media__ = __webpack_require__(103);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__app_mtd_service__ = __webpack_require__(29);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__app_global__ = __webpack_require__(28);
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -312,12 +349,12 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 
 
 
-var WordModal = /** @class */ (function () {
-    function WordModal(navCtrl, navParams, viewCtrl, nativeAudio, alertCtrl, file, transfer, storage, plt, mtdService) {
+var WordModal = (function () {
+    function WordModal(navCtrl, navParams, viewCtrl, audio, alertCtrl, file, transfer, storage, plt, mtdService) {
         this.navCtrl = navCtrl;
         this.navParams = navParams;
         this.viewCtrl = viewCtrl;
-        this.nativeAudio = nativeAudio;
+        this.audio = audio;
         this.alertCtrl = alertCtrl;
         this.file = file;
         this.transfer = transfer;
@@ -364,58 +401,94 @@ var WordModal = /** @class */ (function () {
     };
     ;
     WordModal.prototype.stopAllAudio = function () {
-        var _this = this;
         this.audio_playing.forEach(function (element) {
             try {
-                element.pause();
+                element.stop();
             }
             catch (error) {
-                _this.nativeAudio.stop(element);
+                element.pause();
             }
         });
         this.audio_playing = [];
+    };
+    WordModal.prototype.mediaPlay = function (path) {
+        var _this = this;
+        var audio = this.audio.create(path);
+        audio.onError.subscribe(function () {
+            _this.audio_playing.pop();
+            _this.onError("The audio file wasn't found.");
+        });
+        audio.onStatusUpdate.subscribe(function (status) {
+            if (status === 1) {
+                _this.audio_playing.push(audio);
+                console.log('playing');
+            }
+            if (status === 4) {
+                _this.audio_playing.pop();
+                console.log('stopped');
+            }
+        });
+        audio.play();
+    };
+    WordModal.prototype.htmlAudioPlay = function (path) {
+        var _this = this;
+        var audio = new Audio(path);
+        audio.onerror = function () {
+            _this.audio_playing.pop();
+            _this.onError("The audio file wasn't found.");
+        };
+        audio.onended = function () {
+            _this.audio_playing.pop();
+        };
+        this.audio_playing.push(audio);
+        audio.play();
+    };
+    WordModal.prototype.playInternal = function (path) {
+        var _this = this;
+        this.file.resolveDirectoryUrl(this.file.dataDirectory).then(function (rootdir) {
+            _this.file.getFile(rootdir, path, { create: false }).then(function (entryFile) {
+                _this.mediaPlay(entryFile.toInternalURL());
+            });
+        });
+    };
+    WordModal.prototype.downloadAndPlay = function (external_path, internal_path) {
+        var _this = this;
+        var targetPath = this.file.dataDirectory + internal_path;
+        console.log('downloading to ' + targetPath);
+        var trustHosts = true;
+        var options = {};
+        this.fileTransfer.download(external_path, targetPath, trustHosts, options).then(function (track) {
+            _this.mediaPlay(track.toInternalURL());
+        }, function (error) { _this.onError(error); });
     };
     WordModal.prototype.playAudio = function (track) {
         var _this = this;
         if (track !== undefined && track.filename !== undefined) {
             // get path. add config path if it's there.
-            var path = track.filename;
+            var path_1 = track.filename;
             if (this.audio_path && this.audio_path !== undefined) {
-                path = this.audio_path + track.filename;
+                path_1 = this.audio_path + track.filename;
             }
             // set ID and path to internal storage
             var internal_path_1 = "assets/audio/" + track.filename;
-            var id_1 = track.filename;
+            var id = Date.now().toString();
             // if desktop or browser, run as HTML5 Audio
             if (this.plt.is('core') || this.plt.is('mobileweb')) {
-                var audio = new Audio(path);
-                audio.onerror = function () {
-                    _this.audio_playing.pop();
-                    _this.onError("The audio file wasn't found.");
-                };
-                this.audio_playing.push(audio);
-                audio.onended = function () { return _this.audio_playing.pop(); };
-                audio.play();
-                // If iOS or Android, download and store
+                this.htmlAudioPlay(path_1);
+                // If iOS or Android, download, store and play
             }
             else if (this.plt.is('android') || this.plt.is('ios')) {
                 this.file.checkFile(this.file.dataDirectory, internal_path_1)
-                    .then(function (_) {
-                    _this.audio_playing.push(id_1);
-                    _this.nativeAudio.preloadSimple(id_1, internal_path_1);
-                    _this.nativeAudio.play(id_1, function () { return _this.audio_playing.pop(); });
+                    .then(function (check) {
+                    if (check) {
+                        _this.playInternal(internal_path_1);
+                    }
+                    else {
+                        _this.downloadAndPlay(path_1, internal_path_1);
+                    }
                 }).catch(function (err) {
-                    var targetPath = _this.file.dataDirectory + internal_path_1;
-                    var trustHosts = true;
-                    var options = {};
-                    _this.fileTransfer.download(internal_path_1, targetPath, trustHosts, options);
-                })
-                    .then(function (track) {
-                    _this.audio_playing.push(id_1);
-                    _this.nativeAudio.preloadSimple(id_1, internal_path_1);
-                    _this.nativeAudio.play(id_1, function () { return _this.audio_playing.pop(); });
-                }, function (error) { _this.onError(error); });
-                ;
+                    _this.downloadAndPlay(path_1, internal_path_1);
+                });
             }
             else {
                 this.showAlert();
@@ -504,7 +577,7 @@ var WordModal = /** @class */ (function () {
         __metadata("design:paramtypes", [__WEBPACK_IMPORTED_MODULE_1_ionic_angular__["g" /* NavController */],
             __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["h" /* NavParams */],
             __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["j" /* ViewController */],
-            __WEBPACK_IMPORTED_MODULE_5__ionic_native_native_audio__["a" /* NativeAudio */],
+            __WEBPACK_IMPORTED_MODULE_5__ionic_native_media__["a" /* Media */],
             __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["a" /* AlertController */],
             __WEBPACK_IMPORTED_MODULE_2__ionic_native_file__["a" /* File */],
             __WEBPACK_IMPORTED_MODULE_3__ionic_native_file_transfer__["a" /* FileTransfer */],
@@ -526,7 +599,7 @@ var WordModal = /** @class */ (function () {
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return StoryPage; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_ionic_angular__ = __webpack_require__(12);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__ionic_native_native_audio__ = __webpack_require__(54);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__ionic_native_native_audio__ = __webpack_require__(295);
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -539,7 +612,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 
 
 
-var StoryPage = /** @class */ (function () {
+var StoryPage = (function () {
     function StoryPage(navParams, alertCtrl, nativeAudio) {
         this.navParams = navParams;
         this.alertCtrl = alertCtrl;
@@ -646,18 +719,18 @@ Object(__WEBPACK_IMPORTED_MODULE_0__angular_platform_browser_dynamic__["a" /* pl
 "use strict";
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return AppModule; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_platform_browser__ = __webpack_require__(32);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_platform_browser__ = __webpack_require__(33);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_ionic_angular__ = __webpack_require__(12);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__ionic_native_native_audio__ = __webpack_require__(54);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__ionic_storage__ = __webpack_require__(55);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__ionic_native_media__ = __webpack_require__(103);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__ionic_storage__ = __webpack_require__(54);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__ionic_native_status_bar__ = __webpack_require__(199);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__ionic_native_file__ = __webpack_require__(105);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__ionic_native_file_transfer__ = __webpack_require__(106);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__ionic_native_splash_screen__ = __webpack_require__(200);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__app_component__ = __webpack_require__(283);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_10__pages__ = __webpack_require__(201);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_11__mtd_service__ = __webpack_require__(28);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_12__pipes_pipes_module__ = __webpack_require__(295);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_11__mtd_service__ = __webpack_require__(29);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_12__pipes_pipes_module__ = __webpack_require__(296);
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -677,7 +750,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 
 
 
-var AppModule = /** @class */ (function () {
+var AppModule = (function () {
     function AppModule() {
     }
     AppModule = __decorate([
@@ -719,7 +792,7 @@ var AppModule = /** @class */ (function () {
                 __WEBPACK_IMPORTED_MODULE_10__pages__["i" /* StoriesPage */],
                 __WEBPACK_IMPORTED_MODULE_10__pages__["j" /* StoryPage */]
             ],
-            providers: [{ provide: __WEBPACK_IMPORTED_MODULE_0__angular_core__["u" /* ErrorHandler */], useClass: __WEBPACK_IMPORTED_MODULE_2_ionic_angular__["c" /* IonicErrorHandler */] }, __WEBPACK_IMPORTED_MODULE_11__mtd_service__["a" /* MTDService */], __WEBPACK_IMPORTED_MODULE_6__ionic_native_file__["a" /* File */], __WEBPACK_IMPORTED_MODULE_7__ionic_native_file_transfer__["a" /* FileTransfer */], __WEBPACK_IMPORTED_MODULE_7__ionic_native_file_transfer__["b" /* FileTransferObject */], __WEBPACK_IMPORTED_MODULE_3__ionic_native_native_audio__["a" /* NativeAudio */], __WEBPACK_IMPORTED_MODULE_8__ionic_native_splash_screen__["a" /* SplashScreen */], __WEBPACK_IMPORTED_MODULE_5__ionic_native_status_bar__["a" /* StatusBar */]]
+            providers: [{ provide: __WEBPACK_IMPORTED_MODULE_0__angular_core__["u" /* ErrorHandler */], useClass: __WEBPACK_IMPORTED_MODULE_2_ionic_angular__["c" /* IonicErrorHandler */] }, __WEBPACK_IMPORTED_MODULE_11__mtd_service__["a" /* MTDService */], __WEBPACK_IMPORTED_MODULE_6__ionic_native_file__["a" /* File */], __WEBPACK_IMPORTED_MODULE_7__ionic_native_file_transfer__["a" /* FileTransfer */], __WEBPACK_IMPORTED_MODULE_7__ionic_native_file_transfer__["b" /* FileTransferObject */], __WEBPACK_IMPORTED_MODULE_3__ionic_native_media__["a" /* Media */], __WEBPACK_IMPORTED_MODULE_8__ionic_native_splash_screen__["a" /* SplashScreen */], __WEBPACK_IMPORTED_MODULE_5__ionic_native_status_bar__["a" /* StatusBar */]]
         })
     ], AppModule);
     return AppModule;
@@ -733,87 +806,18 @@ var AppModule = /** @class */ (function () {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return MTDService; });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__global__ = __webpack_require__(34);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_rxjs_BehaviorSubject__ = __webpack_require__(287);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_rxjs_BehaviorSubject___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_rxjs_BehaviorSubject__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__ionic_storage__ = __webpack_require__(55);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_lodash__ = __webpack_require__(202);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_lodash___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_4_lodash__);
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return MTDInfo; });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_lodash__ = __webpack_require__(202);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_lodash___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_lodash__);
 
-
-
-
-
-var MTDService = /** @class */ (function () {
-    function MTDService(storage) {
-        this.storage = storage;
-        this.bookmarks = new __WEBPACK_IMPORTED_MODULE_2_rxjs_BehaviorSubject__["BehaviorSubject"]([]);
-        this.categories = {};
-        if (__WEBPACK_IMPORTED_MODULE_1__global__["a" /* MTDInfo */].allAudioEntries.length > 0 && __WEBPACK_IMPORTED_MODULE_1__global__["a" /* MTDInfo */].allAudioEntries.length < (__WEBPACK_IMPORTED_MODULE_1__global__["a" /* MTDInfo */].allEntries.length * .5)) {
-            this.categories["audio"] = {};
-            this.categories["audio"] = __WEBPACK_IMPORTED_MODULE_1__global__["a" /* MTDInfo */].allAudioEntries;
-        }
-        var _loop_1 = function (key) {
-            this_1.categories[key] = __WEBPACK_IMPORTED_MODULE_1__global__["a" /* MTDInfo */].dataDict.filter(function (x) { return x['source'] == key; });
-        };
-        var this_1 = this;
-        for (var _i = 0, _a = __WEBPACK_IMPORTED_MODULE_1__global__["a" /* MTDInfo */].dataKeys; _i < _a.length; _i++) {
-            var key = _a[_i];
-            _loop_1(key);
-        }
-        var semantic_categories = Object(__WEBPACK_IMPORTED_MODULE_4_lodash__["uniq"])(__WEBPACK_IMPORTED_MODULE_1__global__["a" /* MTDInfo */].allEntries.map(function (entry) {
-            if (entry.theme) {
-                entry.theme = entry.theme.toLowerCase();
-            }
-            return entry.theme;
-        })).sort();
-        var _loop_2 = function (cat) {
-            if (cat) {
-                this_2.categories[cat] = __WEBPACK_IMPORTED_MODULE_1__global__["a" /* MTDInfo */].allEntries.filter(function (entry) { return entry.theme === cat; });
-            }
-        };
-        var this_2 = this;
-        for (var _b = 0, semantic_categories_1 = semantic_categories; _b < semantic_categories_1.length; _b++) {
-            var cat = semantic_categories_1[_b];
-            _loop_2(cat);
-        }
-        console.log(this.categories);
-    }
-    MTDService.prototype.setBookmarks = function (val) {
-        this.bookmarks.next(val);
-        this.storage.set(__WEBPACK_IMPORTED_MODULE_1__global__["a" /* MTDInfo */].config.L1.name + __WEBPACK_IMPORTED_MODULE_1__global__["a" /* MTDInfo */].config.build, JSON.stringify(val));
-    };
-    MTDService.prototype.toggleBookmark = function (entry) {
-        var i = this.bookmarks.value.indexOf(entry);
-        var bookmarks;
-        if (i > -1) {
-            bookmarks = this.bookmarks.value;
-            bookmarks.splice(i, 1);
-        }
-        else if (i < 0) {
-            bookmarks = this.bookmarks.value.concat([entry]);
-        }
-        this.setBookmarks(bookmarks);
-    };
-    MTDService = __decorate([
-        Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["A" /* Injectable */])(),
-        __metadata("design:paramtypes", [__WEBPACK_IMPORTED_MODULE_3__ionic_storage__["b" /* Storage */]])
-    ], MTDService);
-    return MTDService;
-}());
-
-//# sourceMappingURL=mtd.service.js.map
+var MTDInfo = Object.freeze({
+    allEntries: window['getAllEntries'](),
+    allAudioEntries: window['getAllAudioEntries'](),
+    config: window['config'],
+    dataDict: window['dataDict'],
+    dataKeys: Object(__WEBPACK_IMPORTED_MODULE_0_lodash__["uniq"])(window['dataDict'].map(function (x) { return x['source']; })),
+});
+//# sourceMappingURL=global.js.map
 
 /***/ }),
 
@@ -826,10 +830,10 @@ var MTDService = /** @class */ (function () {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_ionic_angular__ = __webpack_require__(12);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__ionic_native_status_bar__ = __webpack_require__(199);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__ionic_native_splash_screen__ = __webpack_require__(200);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__ionic_storage__ = __webpack_require__(55);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__ionic_storage__ = __webpack_require__(54);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__pages__ = __webpack_require__(201);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__global__ = __webpack_require__(34);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__mtd_service__ = __webpack_require__(28);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__global__ = __webpack_require__(28);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__mtd_service__ = __webpack_require__(29);
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -847,7 +851,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 
 
 
-var MyApp = /** @class */ (function () {
+var MyApp = (function () {
     function MyApp(platform, statusBar, splashScreen, storage, mtdService) {
         var _this = this;
         this.platform = platform;
@@ -931,7 +935,7 @@ var MyApp = /** @class */ (function () {
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return About; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_ionic_angular__ = __webpack_require__(12);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__app_global__ = __webpack_require__(34);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__app_global__ = __webpack_require__(28);
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -944,7 +948,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 
 
 
-var About = /** @class */ (function () {
+var About = (function () {
     function About(navCtrl) {
         this.navCtrl = navCtrl;
         this.language = __WEBPACK_IMPORTED_MODULE_2__app_global__["a" /* MTDInfo */].config['L1']['name'];
@@ -952,7 +956,7 @@ var About = /** @class */ (function () {
     }
     About = __decorate([
         Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["m" /* Component */])({
-            selector: 'page-about',template:/*ion-inline-start:"/Users/pinea/wmrc-gitksan-mobile/src/pages/about/about.html"*/'<ion-header>\n  <ion-navbar>\n    <button ion-button menuToggle>\n      <ion-icon name="menu"></ion-icon>\n    </button>\n    <ion-title>About</ion-title>\n  </ion-navbar>\n</ion-header>\n\n<ion-content padding scrollbar-y-auto>\n  <p>Welcome to the {{ language }} Mother Tongues Dictionary!\n  </p>\n</ion-content>'/*ion-inline-end:"/Users/pinea/wmrc-gitksan-mobile/src/pages/about/about.html"*/
+            selector: 'page-about',template:/*ion-inline-start:"/Users/pinea/wmrc-gitksan-mobile/src/pages/about/about.html"*/'<ion-header>\n  <ion-navbar>\n    <button ion-button menuToggle>\n      <ion-icon name="menu"></ion-icon>\n    </button>\n    <ion-title>About</ion-title>\n  </ion-navbar>\n</ion-header>\n\n<ion-content padding scrollbar-y-auto>\n  <div class="col-md-8 col-md-offset-2" id="text">\n    <p class="whiteText">Hello! Welcome to the demonstration version of the Online <b>Gitksan</b> Dictionary with 5000 new audio files added in July 2019. The\n      dictionary is\n      an initiative of the <a href="http://lingserver.arts.ubc.ca/linguistics/research/Gitxsan_group">Gitksan Research\n        Lab</a></p>\n    <p class="whiteText">Please feel free to use this dictionary for educational purposes only.</p>\n    <p class="whiteText">Please be aware that this should <em>not</em> be considered a working version of the\n      dictionary. Search\n      functionality is being updated and algorithms are being worked on to ensure better searching capabilities,\n      but in the interim, full search functionality for the dictionary should not be expected. More information\n      about this dictionary will be posted to this site soon.</p>\n    <p class="whiteText">We would like to thank the generous time of all of the people involved in the dictionary, and\n      we hope\n      to update this site soon with more information about everybody involved.</p>\n    <p class="whiteText">We would also like to thank artist Maaslik’i’nsxw (Ken Mowatt)\'s generous donation of artwork\n      to this project.</p>\n    <p class="whiteText">This project was supported by the SSHRC Insight Grant 435-2016-1694, \'Enhancing Lexical\n      Resources for\n      BC First Nations Languages\'.</p>\n    <p class="whiteText">For any questions or concerns, please contact <a href="mailto:henry.davis@ubc.ca">Henry\n        Davis</a></p>\n  </div>\n</ion-content>'/*ion-inline-end:"/Users/pinea/wmrc-gitksan-mobile/src/pages/about/about.html"*/
         }),
         __metadata("design:paramtypes", [__WEBPACK_IMPORTED_MODULE_1_ionic_angular__["g" /* NavController */]])
     ], About);
@@ -970,7 +974,7 @@ var About = /** @class */ (function () {
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return Bookmarks; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_ionic_angular__ = __webpack_require__(12);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__app_mtd_service__ = __webpack_require__(28);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__app_mtd_service__ = __webpack_require__(29);
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -983,7 +987,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 
 
 
-var Bookmarks = /** @class */ (function () {
+var Bookmarks = (function () {
     function Bookmarks(navCtrl, mtdService) {
         var _this = this;
         this.navCtrl = navCtrl;
@@ -1018,8 +1022,8 @@ var Bookmarks = /** @class */ (function () {
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return Browse; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_ionic_angular__ = __webpack_require__(12);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__app_global__ = __webpack_require__(34);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__app_mtd_service__ = __webpack_require__(28);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__app_global__ = __webpack_require__(28);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__app_mtd_service__ = __webpack_require__(29);
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -1033,7 +1037,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 
 
 
-var Browse = /** @class */ (function () {
+var Browse = (function () {
     function Browse(navCtrl, mtdService) {
         this.navCtrl = navCtrl;
         this.mtdService = mtdService;
@@ -1132,7 +1136,7 @@ var Browse = /** @class */ (function () {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_ionic_angular__ = __webpack_require__(12);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__flashcard_modal_component__ = __webpack_require__(203);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__app_mtd_service__ = __webpack_require__(28);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__app_mtd_service__ = __webpack_require__(29);
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -1146,7 +1150,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 
 
 
-var Flashcards = /** @class */ (function () {
+var Flashcards = (function () {
     function Flashcards(navCtrl, modalCtrl, mtdService, alertCtrl) {
         this.navCtrl = navCtrl;
         this.modalCtrl = modalCtrl;
@@ -1195,6 +1199,94 @@ var Flashcards = /** @class */ (function () {
 
 /***/ }),
 
+/***/ 29:
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return MTDService; });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__global__ = __webpack_require__(28);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_rxjs_BehaviorSubject__ = __webpack_require__(287);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_rxjs_BehaviorSubject___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_rxjs_BehaviorSubject__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__ionic_storage__ = __webpack_require__(54);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_lodash__ = __webpack_require__(202);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_lodash___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_4_lodash__);
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+
+
+
+
+
+var MTDService = (function () {
+    function MTDService(storage) {
+        this.storage = storage;
+        this.bookmarks = new __WEBPACK_IMPORTED_MODULE_2_rxjs_BehaviorSubject__["BehaviorSubject"]([]);
+        this.categories = {};
+        if (__WEBPACK_IMPORTED_MODULE_1__global__["a" /* MTDInfo */].allAudioEntries.length > 0 && __WEBPACK_IMPORTED_MODULE_1__global__["a" /* MTDInfo */].allAudioEntries.length < (__WEBPACK_IMPORTED_MODULE_1__global__["a" /* MTDInfo */].allEntries.length * .5)) {
+            this.categories["audio"] = {};
+            this.categories["audio"] = __WEBPACK_IMPORTED_MODULE_1__global__["a" /* MTDInfo */].allAudioEntries;
+        }
+        var _loop_1 = function (key) {
+            this_1.categories[key] = __WEBPACK_IMPORTED_MODULE_1__global__["a" /* MTDInfo */].dataDict.filter(function (x) { return x['source'] == key; });
+        };
+        var this_1 = this;
+        for (var _i = 0, _a = __WEBPACK_IMPORTED_MODULE_1__global__["a" /* MTDInfo */].dataKeys; _i < _a.length; _i++) {
+            var key = _a[_i];
+            _loop_1(key);
+        }
+        var semantic_categories = Object(__WEBPACK_IMPORTED_MODULE_4_lodash__["uniq"])(__WEBPACK_IMPORTED_MODULE_1__global__["a" /* MTDInfo */].allEntries.map(function (entry) {
+            if (entry.theme) {
+                entry.theme = entry.theme.toLowerCase();
+            }
+            return entry.theme;
+        })).sort();
+        var _loop_2 = function (cat) {
+            if (cat) {
+                this_2.categories[cat] = __WEBPACK_IMPORTED_MODULE_1__global__["a" /* MTDInfo */].allEntries.filter(function (entry) { return entry.theme === cat; });
+            }
+        };
+        var this_2 = this;
+        for (var _b = 0, semantic_categories_1 = semantic_categories; _b < semantic_categories_1.length; _b++) {
+            var cat = semantic_categories_1[_b];
+            _loop_2(cat);
+        }
+        console.log(this.categories);
+    }
+    MTDService.prototype.setBookmarks = function (val) {
+        this.bookmarks.next(val);
+        this.storage.set(__WEBPACK_IMPORTED_MODULE_1__global__["a" /* MTDInfo */].config.L1.name + __WEBPACK_IMPORTED_MODULE_1__global__["a" /* MTDInfo */].config.build, JSON.stringify(val));
+    };
+    MTDService.prototype.toggleBookmark = function (entry) {
+        var i = this.bookmarks.value.indexOf(entry);
+        var bookmarks;
+        if (i > -1) {
+            bookmarks = this.bookmarks.value;
+            bookmarks.splice(i, 1);
+        }
+        else if (i < 0) {
+            bookmarks = this.bookmarks.value.concat([entry]);
+        }
+        this.setBookmarks(bookmarks);
+    };
+    MTDService = __decorate([
+        Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["A" /* Injectable */])(),
+        __metadata("design:paramtypes", [__WEBPACK_IMPORTED_MODULE_3__ionic_storage__["b" /* Storage */]])
+    ], MTDService);
+    return MTDService;
+}());
+
+//# sourceMappingURL=mtd.service.js.map
+
+/***/ }),
+
 /***/ 290:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -1213,7 +1305,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 
 
-var Random = /** @class */ (function () {
+var Random = (function () {
     function Random(navCtrl) {
         this.navCtrl = navCtrl;
     }
@@ -1240,7 +1332,7 @@ var Random = /** @class */ (function () {
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return Search; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_ionic_angular__ = __webpack_require__(12);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__app_global__ = __webpack_require__(34);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__app_global__ = __webpack_require__(28);
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -1253,7 +1345,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 
 
 
-var Search = /** @class */ (function () {
+var Search = (function () {
     function Search(navCtrl) {
         this.navCtrl = navCtrl;
         this.entries = __WEBPACK_IMPORTED_MODULE_2__app_global__["a" /* MTDInfo */].allEntries;
@@ -1334,7 +1426,7 @@ var Search = /** @class */ (function () {
 
 "use strict";
 /* unused harmony export Entry */
-var Entry = /** @class */ (function () {
+var Entry = (function () {
     function Entry() {
     }
     return Entry;
@@ -1364,7 +1456,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 
 
 
-var EntryList = /** @class */ (function () {
+var EntryList = (function () {
     function EntryList(navCtrl, viewCtrl, modalCtrl) {
         this.navCtrl = navCtrl;
         this.viewCtrl = viewCtrl;
@@ -1430,7 +1522,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 
 
 
-var StoriesPage = /** @class */ (function () {
+var StoriesPage = (function () {
     function StoriesPage(navCtrl) {
         this.navCtrl = navCtrl;
         this.storyPage = __WEBPACK_IMPORTED_MODULE_2__story__["a" /* StoryPage */];
@@ -1528,13 +1620,13 @@ var StoriesPage = /** @class */ (function () {
 
 /***/ }),
 
-/***/ 295:
+/***/ 296:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return PipesModule; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__no_null_values_no_null_values__ = __webpack_require__(296);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__no_null_values_no_null_values__ = __webpack_require__(297);
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -1543,7 +1635,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 };
 
 
-var PipesModule = /** @class */ (function () {
+var PipesModule = (function () {
     function PipesModule() {
     }
     PipesModule = __decorate([
@@ -1560,7 +1652,7 @@ var PipesModule = /** @class */ (function () {
 
 /***/ }),
 
-/***/ 296:
+/***/ 297:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -1579,7 +1671,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
  *
  * See https://angular.io/api/core/Pipe for more info on Angular Pipes.
  */
-var NoNullValuesPipe = /** @class */ (function () {
+var NoNullValuesPipe = (function () {
     function NoNullValuesPipe() {
     }
     /**
@@ -1602,7 +1694,7 @@ var NoNullValuesPipe = /** @class */ (function () {
     return NoNullValuesPipe;
 }());
 
-var NoNullObjectValuesPipe = /** @class */ (function () {
+var NoNullObjectValuesPipe = (function () {
     function NoNullObjectValuesPipe() {
     }
     /**
@@ -1635,25 +1727,6 @@ var NoNullObjectValuesPipe = /** @class */ (function () {
 }());
 
 //# sourceMappingURL=no-null-values.js.map
-
-/***/ }),
-
-/***/ 34:
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return MTDInfo; });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_lodash__ = __webpack_require__(202);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_lodash___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_lodash__);
-
-var MTDInfo = Object.freeze({
-    allEntries: window['getAllEntries'](),
-    allAudioEntries: window['getAllAudioEntries'](),
-    config: window['config'],
-    dataDict: window['dataDict'],
-    dataKeys: Object(__WEBPACK_IMPORTED_MODULE_0_lodash__["uniq"])(window['dataDict'].map(function (x) { return x['source']; })),
-});
-//# sourceMappingURL=global.js.map
 
 /***/ })
 
