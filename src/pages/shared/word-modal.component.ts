@@ -44,6 +44,7 @@ export class WordModal {
     public storage: Storage,
     public plt: Platform,
     public mtdService: MTDService) {
+    console.log(this.entry)
     this.entry = navParams.get('entry');
     if (this.entry.optional) {
       this.optionalSelection = this.entry.optional.map(x => Object.keys(x))[0]

@@ -86,10 +86,10 @@ webpackEmptyAsyncContext.id = 158;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_ionic_angular__ = __webpack_require__(12);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__app_mtd_service__ = __webpack_require__(29);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__ionic_native_file__ = __webpack_require__(105);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__ionic_native_media__ = __webpack_require__(103);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__ionic_native_file_transfer__ = __webpack_require__(106);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__app_global__ = __webpack_require__(28);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__ionic_native_file__ = __webpack_require__(56);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__ionic_native_media__ = __webpack_require__(54);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__ionic_native_file_transfer__ = __webpack_require__(57);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__app_global__ = __webpack_require__(25);
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -326,12 +326,12 @@ var Flashcard = (function () {
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return WordModal; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_ionic_angular__ = __webpack_require__(12);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__ionic_native_file__ = __webpack_require__(105);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__ionic_native_file_transfer__ = __webpack_require__(106);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__ionic_storage__ = __webpack_require__(54);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__ionic_native_media__ = __webpack_require__(103);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__ionic_native_file__ = __webpack_require__(56);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__ionic_native_file_transfer__ = __webpack_require__(57);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__ionic_storage__ = __webpack_require__(55);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__ionic_native_media__ = __webpack_require__(54);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__app_mtd_service__ = __webpack_require__(29);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__app_global__ = __webpack_require__(28);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__app_global__ = __webpack_require__(25);
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -368,6 +368,7 @@ var WordModal = (function () {
         this.audio_playing = [];
         this.audio_path = __WEBPACK_IMPORTED_MODULE_7__app_global__["a" /* MTDInfo */].config['audio_path'];
         this.fileTransfer = this.transfer.create();
+        console.log(this.entry);
         this.entry = navParams.get('entry');
         if (this.entry.optional) {
             this.optionalSelection = this.entry.optional.map(function (x) { return Object.keys(x); })[0];
@@ -599,7 +600,10 @@ var WordModal = (function () {
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return StoryPage; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_ionic_angular__ = __webpack_require__(12);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__ionic_native_native_audio__ = __webpack_require__(295);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__ionic_native_file__ = __webpack_require__(56);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__ionic_native_file_transfer__ = __webpack_require__(57);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__ionic_native_media__ = __webpack_require__(54);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__app_global__ = __webpack_require__(25);
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -612,16 +616,24 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 
 
 
+
+
+
 var StoryPage = (function () {
-    function StoryPage(navParams, alertCtrl, nativeAudio) {
+    function StoryPage(navParams, alertCtrl, audio, plt, file, transfer) {
         this.navParams = navParams;
         this.alertCtrl = alertCtrl;
-        this.nativeAudio = nativeAudio;
+        this.audio = audio;
+        this.plt = plt;
+        this.file = file;
+        this.transfer = transfer;
         this.checkedOptions = [];
         this.index = 0;
         this.storySlides = [];
         this.audio_playing = [];
+        this.audio_path = __WEBPACK_IMPORTED_MODULE_5__app_global__["a" /* MTDInfo */].config['audio_path'];
         this.slides = this.navParams.get('storyPages');
+        this.fileTransfer = this.transfer.create();
         this.image = this.navParams.get('cover');
         this.title = this.navParams.get('title');
         this.subtitle = this.navParams.get('subtitle');
@@ -678,19 +690,126 @@ var StoryPage = (function () {
             return false;
         }
     };
+    StoryPage.prototype.showAlert = function () {
+        var alert = this.alertCtrl.create({
+            title: 'Sorry',
+            subTitle: 'There is no audio for this yet.',
+            buttons: ['Dismiss']
+        });
+        alert.present();
+    };
+    ;
+    StoryPage.prototype.mediaPlay = function (path) {
+        var _this = this;
+        var audio = this.audio.create(path);
+        audio.onError.subscribe(function () {
+            _this.audio_playing.pop();
+            _this.onError("The audio file wasn't found.");
+        });
+        audio.onStatusUpdate.subscribe(function (status) {
+            if (status === 1) {
+                _this.audio_playing.push(audio);
+                console.log('playing');
+            }
+            if (status === 4) {
+                _this.audio_playing.pop();
+                console.log('stopped');
+            }
+        });
+        audio.play();
+    };
+    StoryPage.prototype.htmlAudioPlay = function (path) {
+        var _this = this;
+        var audio = new Audio(path);
+        console.log(audio);
+        audio.onerror = function () {
+            _this.audio_playing.pop();
+            _this.onError("The audio file wasn't found.");
+        };
+        audio.onended = function () {
+            _this.audio_playing.pop();
+        };
+        this.audio_playing.push(audio);
+        audio.play();
+    };
+    StoryPage.prototype.playInternal = function (path) {
+        var _this = this;
+        this.file.resolveDirectoryUrl(this.file.dataDirectory).then(function (rootdir) {
+            _this.file.getFile(rootdir, path, { create: false }).then(function (entryFile) {
+                _this.mediaPlay(entryFile.toInternalURL());
+            });
+        });
+    };
+    StoryPage.prototype.downloadAndPlay = function (external_path, internal_path) {
+        var _this = this;
+        var targetPath = this.file.dataDirectory + internal_path;
+        console.log('downloading to ' + targetPath);
+        var trustHosts = true;
+        var options = {};
+        this.fileTransfer.download(external_path, targetPath, trustHosts, options).then(function (track) {
+            _this.mediaPlay(track.toInternalURL());
+        }, function (error) { _this.onError(error); });
+    };
     StoryPage.prototype.playAudio = function (track) {
         var _this = this;
-        this.nativeAudio.preloadComplex(track, track, 1, 1, 0).then(function (success) {
-            _this.nativeAudio.play(track, function (success) { return _this.nativeAudio.unload(track); });
-        }, function (error) { console.log(error); });
+        track = { filename: track, path: "https://roedoejet.github.io/wmrc-gitksan/audio/" };
+        if (track !== undefined && track.filename !== undefined) {
+            // get path. add config path if it's there.
+            var path_1 = track.filename;
+            if (this.audio_path && this.audio_path !== undefined) {
+                path_1 = this.audio_path + track.filename;
+            }
+            // set ID and path to internal storage
+            var internal_path_1 = "assets/audio/" + track.filename;
+            var id = Date.now().toString();
+            // if desktop or browser, run as HTML5 Audio
+            if (this.plt.is('core') || this.plt.is('mobileweb')) {
+                this.htmlAudioPlay(path_1);
+                // If iOS or Android, download, store and play
+            }
+            else if (this.plt.is('android') || this.plt.is('ios')) {
+                this.file.checkFile(this.file.dataDirectory, internal_path_1)
+                    .then(function (check) {
+                    if (check) {
+                        _this.playInternal(internal_path_1);
+                    }
+                    else {
+                        _this.downloadAndPlay(path_1, internal_path_1);
+                    }
+                }).catch(function (err) {
+                    _this.downloadAndPlay(path_1, internal_path_1);
+                });
+            }
+            else {
+                this.showAlert();
+            }
+        }
+        else {
+            this.onError("No audio for this file.");
+        }
     };
+    StoryPage.prototype.onError = function (err) {
+        console.log(err);
+        var alert = this.alertCtrl.create({
+            title: 'Sorry',
+            subTitle: err.toString(),
+            buttons: ['OK']
+        });
+        alert.present();
+    };
+    ;
     StoryPage.prototype.stopAudio = function (track) {
-        this.nativeAudio.stop(track);
+        if (this.plt.is('core') || this.plt.is('mobileweb')) {
+            this.audio_playing.forEach(function (a) { return a.pause(); });
+        }
+        else {
+            this.audio_playing.forEach(function (a) { return a.stop(); });
+        }
     };
     StoryPage = __decorate([
         Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["m" /* Component */])({template:/*ion-inline-start:"/Users/pinea/wmrc-gitksan-mobile/src/pages/stories/story.html"*/'<ion-header>\n  <ion-navbar>\n    <ion-title></ion-title>\n    <ion-buttons end>\n      <button icon-only id="options" (click)="showOptions()">\n        <ion-icon name="ios-settings"></ion-icon>\n      </button>\n    </ion-buttons>\n  </ion-navbar>\n</ion-header>\n\n<ion-content class="tutorial-page">\n\n  <ion-slides pager #storySlider>\n    <ion-slide>\n      <img [src]="image" class="slide-image" />\n      <h2 class="slide-title" [innerHTML]="title"></h2>\n      <p [innerHTML]="subtitle"></p>\n    </ion-slide>\n    <ion-slide *ngFor="let slide of slides">\n      <img [src]="slide.image" class="slide-image"/>\n      <ion-toolbar class="audio">\n        <ion-icon class="audio" name="play" (click)="playAudio(slide.audio)"></ion-icon>\n        <!-- <ion-icon class="audio" name="pause" (click)="pauseAudio(slide.audio)"></ion-icon> -->\n        <ion-icon class="audio stop" name="square" (click)="stopAudio(slide.audio)"></ion-icon>\n      </ion-toolbar>\n      <p class="slide-title" [innerHTML]="slide.gitksan" id="target"></p>\n      <p class="option" *ngFor="let option of checkedOptions">\n        {{slide.optional[option]}}\n      </p>\n      <p [innerHTML]="slide.english" id="english"></p>\n    </ion-slide>\n  </ion-slides>\n</ion-content>'/*ion-inline-end:"/Users/pinea/wmrc-gitksan-mobile/src/pages/stories/story.html"*/
         }),
-        __metadata("design:paramtypes", [__WEBPACK_IMPORTED_MODULE_1_ionic_angular__["h" /* NavParams */], __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["a" /* AlertController */], __WEBPACK_IMPORTED_MODULE_2__ionic_native_native_audio__["a" /* NativeAudio */]])
+        __metadata("design:paramtypes", [__WEBPACK_IMPORTED_MODULE_1_ionic_angular__["h" /* NavParams */], __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["a" /* AlertController */], __WEBPACK_IMPORTED_MODULE_4__ionic_native_media__["a" /* Media */], __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["i" /* Platform */], __WEBPACK_IMPORTED_MODULE_2__ionic_native_file__["a" /* File */], __WEBPACK_IMPORTED_MODULE_3__ionic_native_file_transfer__["a" /* FileTransfer */]])
     ], StoryPage);
     return StoryPage;
 }());
@@ -721,16 +840,16 @@ Object(__WEBPACK_IMPORTED_MODULE_0__angular_platform_browser_dynamic__["a" /* pl
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_platform_browser__ = __webpack_require__(33);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_ionic_angular__ = __webpack_require__(12);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__ionic_native_media__ = __webpack_require__(103);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__ionic_storage__ = __webpack_require__(54);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__ionic_native_media__ = __webpack_require__(54);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__ionic_storage__ = __webpack_require__(55);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__ionic_native_status_bar__ = __webpack_require__(199);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__ionic_native_file__ = __webpack_require__(105);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__ionic_native_file_transfer__ = __webpack_require__(106);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__ionic_native_file__ = __webpack_require__(56);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__ionic_native_file_transfer__ = __webpack_require__(57);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__ionic_native_splash_screen__ = __webpack_require__(200);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__app_component__ = __webpack_require__(283);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_10__pages__ = __webpack_require__(201);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_11__mtd_service__ = __webpack_require__(29);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_12__pipes_pipes_module__ = __webpack_require__(296);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_12__pipes_pipes_module__ = __webpack_require__(295);
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -802,7 +921,7 @@ var AppModule = (function () {
 
 /***/ }),
 
-/***/ 28:
+/***/ 25:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -830,9 +949,9 @@ var MTDInfo = Object.freeze({
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_ionic_angular__ = __webpack_require__(12);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__ionic_native_status_bar__ = __webpack_require__(199);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__ionic_native_splash_screen__ = __webpack_require__(200);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__ionic_storage__ = __webpack_require__(54);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__ionic_storage__ = __webpack_require__(55);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__pages__ = __webpack_require__(201);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__global__ = __webpack_require__(28);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__global__ = __webpack_require__(25);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__mtd_service__ = __webpack_require__(29);
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -935,7 +1054,7 @@ var MyApp = (function () {
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return About; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_ionic_angular__ = __webpack_require__(12);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__app_global__ = __webpack_require__(28);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__app_global__ = __webpack_require__(25);
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -1022,7 +1141,7 @@ var Bookmarks = (function () {
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return Browse; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_ionic_angular__ = __webpack_require__(12);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__app_global__ = __webpack_require__(28);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__app_global__ = __webpack_require__(25);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__app_mtd_service__ = __webpack_require__(29);
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -1205,10 +1324,10 @@ var Flashcards = (function () {
 "use strict";
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return MTDService; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__global__ = __webpack_require__(28);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__global__ = __webpack_require__(25);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_rxjs_BehaviorSubject__ = __webpack_require__(287);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_rxjs_BehaviorSubject___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_rxjs_BehaviorSubject__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__ionic_storage__ = __webpack_require__(54);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__ionic_storage__ = __webpack_require__(55);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_lodash__ = __webpack_require__(202);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_lodash___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_4_lodash__);
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
@@ -1332,7 +1451,7 @@ var Random = (function () {
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return Search; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_ionic_angular__ = __webpack_require__(12);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__app_global__ = __webpack_require__(28);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__app_global__ = __webpack_require__(25);
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -1535,7 +1654,7 @@ var StoriesPage = (function () {
                         'english': "Mr. Alayst resided in Lax Alayst, this was the name of the village. All they did was sleep in this village. Even the trees were lazy. Little flowers, hung their heads and slept. The grass didn’t grow, all they did was sleep. The bird songs were funny, one would start singing and fall asleep.",
                         'gitksan': "Jok̲t Mr. Alayst g̲o’ohl Lax̲ Alayst, ‘nit wahl g̲alts’apdiit. HLaa wowax̲ japdiit g̲o’ohl anjok̲diit. Ts’ahl g̲ang̲an, ii ap hoti alalaystdiit. K’uba majag̲alee, ii hoti dip hislisxw g̲at’img̲esdiit, wowax̲diit. Needii ’wihl limxshl habasxw, sa wowax̲ japdiit. Am asgiihl hehl limx k’uba ts’uuts’, wo sit’aa’maahl ligi k’yulit, ii wox̲wok̲t.",
                         'image': "assets/img/stories/p1mrlazy.jpg",
-                        'audio': "assets/audio/alayst_1.mp3",
+                        'audio': "alayst_1.mp3",
                         'optional': {
                             'breakdown': "Jok̲=t Mr. Alayst g̲o’o=hl Lax̲ Alayst, ‘nit wa=hl g̲alts’ap-diit. HLaa wowax̲ jap-diit g̲o’o=hl anjok̲-diit. Ts’a=hl g̲an~g̲an-ii, ii ap hoti al~alayst-diit. k’uba majag̲alee, ii hoti dip hislisxw g̲a-t’img̲es-diit, wowax̲-diit. Nee=dii ’wihl limxs=hl habasxw, xsa wowax̲ jap-diit. Am asgi=hl he=hl limx k’uba ts’uuts’, wo sit’aa’maa=hl ligi k’yul-it, ii wox̲~wok̲-t.",
                             'gloss': "live=dm Mr. Lazy loc=cn On Lazy, 3sg.iii name=cn village-3pl.ii. incep sleep make-3pl.ii loc=cn live-3pl.ii. even?=cn pl~tree-like cl.cnj ver again pl~lazy-3pl.ii. small flower, cl.cnj again 1pl.i hung? distr-head-3pl.ii, sleep-3pl.ii. neg=foc around grow=cn grass, only sleep make-3pl.ii. only ugly=cn say=cn sing small bird, start=cn dwid one.animal-sx, cl.cnj pl~sleep-3sg.ii"
@@ -1544,7 +1663,7 @@ var StoriesPage = (function () {
                         'english': 'Mr. Alayst didn’t get up until after lunch because he was lazy. Finally he would get up and sit and eat. This took awhile because he would sleep. After he finished eating he would sit on the porch and sleep. He did nothing. He did not chop wood. He did not go fishing. Perhaps the fish were lazy.',
                         'gitksan': "’Wagayt galanhl silxwsa  wil  dii  gyuksxwhl  Mr.  Alayst. Wil guu alaysit’. Ii gas ligi gwinitxw’t ii t’aa wo ga yookxwt’, nakw ’wihl wilt, wil wo ga wok’t. Ii hlaa hleekxw’t ii wo t’aat’ lax tawnt’ ii wo ga wok’t. Nee dii gwi ji jabit. Nee dii yats lakxw’t. Nee dii ixw’t. Hoti alalys’t dim mahl hon.",
                         'image': "assets/img/stories/p2mrlazy.jpg",
-                        'audio': "assets/audio/alayst_2.mp3",
+                        'audio': "alayst_2.mp3",
                         'optional': {
                             'breakdown': "Check back soon for a detailed breakdown",
                             'gloss': "Check back soon for a detailed gloss"
@@ -1553,7 +1672,7 @@ var StoriesPage = (function () {
                         'english': 'Once when he was sleeping he dreamt that someone came to give him big money he had won. They couldn’t wake him up.That was the end of his laziness. He got up early after his dream. He was afraid to sleep in.',
                         'gitksan': "Ii k’i’yhl ho wok’t, ii xsiwogihl ’witxwhl ant ginamhl wii tisim daala  xsdaa’t. Ii gos jiit gyuksin diit nit.  Ii nit wil ha’xw wihl alaysit. Gan wila ’wihl hlook galanhl xsiwok’t.  Xpts’axw nit dim gina wok’t.",
                         'image': "assets/img/stories/p3mrlazy.jpg",
-                        'audio': "assets/audio/alayst_3.mp3",
+                        'audio': "alayst_3.mp3",
                         'optional': {
                             'breakdown': "Check back soon for a detailed breakdown",
                             'gloss': "Check back soon for a detailed gloss"
@@ -1562,7 +1681,7 @@ var StoriesPage = (function () {
                         'english': 'He was energetic. He was no longer called Mr. Alayst. He did good for as long as he lived.',
                         'gitksan': "Ii ’wihl hlgu galx’t. Ii nee diit hoti sa wa diit’ nit as Mr. Alays’t. Ii amhl laa ’wihl wilt’ ga’nakw didilst’t.",
                         'image': "assets/img/stories/p4mrlazy.jpg",
-                        'audio': "assets/audio/alayst_4.mp3",
+                        'audio': "alayst_4.mp3",
                         'optional': {
                             'breakdown': "Check back soon for a detailed breakdown",
                             'gloss': "Check back soon for a detailed gloss"
@@ -1577,7 +1696,7 @@ var StoriesPage = (function () {
                         'english': 'Johnny went to the smokehouse. He washed the poles. Johnny washed the filleting table. Johnny hung the fish. Johnny let it smoke overnight.',
                         'gitksan': "Yee’t Ts’onny go’ohl wilpsihon. Saksin’thl ’wit. Saksin’thl ha nii ts’al. Lixswis Ts’onnyhl hon’txw’t. K’i’yhl axxw’t mi’indins Ts’onnyhl hontxw’t.",
                         'image': "assets/img/stories/p1smokehouse.jpg",
-                        'audio': "assets/audio/tsonny_1.mp3",
+                        'audio': "tsonny_1.mp3",
                         'optional': {
                             'breakdown': "Check back soon for a detailed breakdown",
                             'gloss': "Check back soon for a detailed gloss"
@@ -1586,16 +1705,16 @@ var StoriesPage = (function () {
                         'english': 'Johnny let the fire go out. He was going to fillet. Johnny cut off the tails of the fish. Johnny cut off the belly. Johnny filleted the fish. Johnny cut off strips. Johnny hung his filleted fish, strips and bellies.',
                         'gitksan': "Ts’akdis Ts’onnyhl mi’in. Wil hlaa yukw dim ts’al’t. Saa k’otsdis Ts’onny hlatsx. Saa k’otsdis Ts’onnyhl ts’ok’. Ts’al’t Ts’onny. Si huxws’t Ts’onny. Liswis Ts’onnyhl ts’al’t, huxws ganhl ts’ok’.",
                         'image': "assets/img/stories/p2smokehouse.jpg",
-                        'audio': "assets/audio/tsonny_2.mp3",
+                        'audio': "tsonny_2.mp3",
                         'optional': {
                             'breakdown': "Check back soon for a detailed breakdown",
                             'gloss': "Check back soon for a detailed gloss"
                         }
                     }, {
                         'english': 'Johnny again built a fire.  Johnny guarded the smokehouse. He did not want the fish to burn. He did not want the bear to steal his fish. Nice smokehouse.',
-                        'gitksan': "hIi hatsim hoo si lakxws Ts’onny. Lihlxis Ts’onny wilpsihon. Nee dii hasak’t dim mihl hontxw’t. Nee dii hasak’t dim’t liluxws hl smaxhl hontxw’t. Amhl wilp sihons Ts’onny.",
+                        'gitksan': "Ii hatsim hoo si lakxws Ts’onny. Lihlxis Ts’onny wilpsihon. Nee dii hasak’t dim mihl hontxw’t. Nee dii hasak’t dim’t liluxws hl smaxhl hontxw’t. Amhl wilp sihons Ts’onny.",
                         'image': "assets/img/stories/p3smokehouse.jpg",
-                        'audio': "assets/audio/tsonny_3.mp3",
+                        'audio': "tsonny_3.mp3",
                         'optional': {
                             'breakdown': "Check back soon for a detailed breakdown",
                             'gloss': "Check back soon for a detailed gloss"
@@ -1620,13 +1739,13 @@ var StoriesPage = (function () {
 
 /***/ }),
 
-/***/ 296:
+/***/ 295:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return PipesModule; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__no_null_values_no_null_values__ = __webpack_require__(297);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__no_null_values_no_null_values__ = __webpack_require__(296);
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -1652,7 +1771,7 @@ var PipesModule = (function () {
 
 /***/ }),
 
-/***/ 297:
+/***/ 296:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
