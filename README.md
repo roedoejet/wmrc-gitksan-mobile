@@ -1,3 +1,14 @@
+# Important 2024 Update!
+
+In order to get this to work I had to:
+
+- nvm use 12.18.3
+- npm install -g ionic cordova@~10
+- Install Android Studio, Java, Gradle
+- Update config.xml with an edited config for <activity android:exported="true" />
+- ionic cordova build android --release
+- apksigner sign --ks "/Users/pinea/Downloads/fv.general.keystore" --ks-pass "pass:**ACTUALPW**"  --v2-signing-enabled true platforms/android/app/build/outputs/apk/release/app-release-unsigned.apk
+
 # Mother Tongues Dictionaries UI (MTD-UI)
 
 *This repo is under construction and could change drastically in the coming months with breaking changes.*

@@ -106,7 +106,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 
 
 
-var Flashcard = (function () {
+var Flashcard = /** @class */ (function () {
     function Flashcard(audio, alertCtrl, navCtrl, navParams, mtdService, viewCtrl, file, plt, transfer) {
         this.audio = audio;
         this.alertCtrl = alertCtrl;
@@ -349,7 +349,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 
 
 
-var WordModal = (function () {
+var WordModal = /** @class */ (function () {
     function WordModal(navCtrl, navParams, viewCtrl, audio, alertCtrl, file, transfer, storage, plt, mtdService) {
         this.navCtrl = navCtrl;
         this.navParams = navParams;
@@ -619,7 +619,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 
 
 
-var StoryPage = (function () {
+var StoryPage = /** @class */ (function () {
     function StoryPage(navParams, alertCtrl, audio, plt, file, transfer) {
         this.navParams = navParams;
         this.alertCtrl = alertCtrl;
@@ -869,7 +869,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 
 
 
-var AppModule = (function () {
+var AppModule = /** @class */ (function () {
     function AppModule() {
     }
     AppModule = __decorate([
@@ -970,7 +970,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 
 
 
-var MyApp = (function () {
+var MyApp = /** @class */ (function () {
     function MyApp(platform, statusBar, splashScreen, storage, mtdService) {
         var _this = this;
         this.platform = platform;
@@ -1067,7 +1067,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 
 
 
-var About = (function () {
+var About = /** @class */ (function () {
     function About(navCtrl) {
         this.navCtrl = navCtrl;
         this.language = __WEBPACK_IMPORTED_MODULE_2__app_global__["a" /* MTDInfo */].config['L1']['name'];
@@ -1106,7 +1106,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 
 
 
-var Bookmarks = (function () {
+var Bookmarks = /** @class */ (function () {
     function Bookmarks(navCtrl, mtdService) {
         var _this = this;
         this.navCtrl = navCtrl;
@@ -1156,7 +1156,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 
 
 
-var Browse = (function () {
+var Browse = /** @class */ (function () {
     function Browse(navCtrl, mtdService) {
         this.navCtrl = navCtrl;
         this.mtdService = mtdService;
@@ -1269,7 +1269,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 
 
 
-var Flashcards = (function () {
+var Flashcards = /** @class */ (function () {
     function Flashcards(navCtrl, modalCtrl, mtdService, alertCtrl) {
         this.navCtrl = navCtrl;
         this.modalCtrl = modalCtrl;
@@ -1344,7 +1344,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 
 
 
-var MTDService = (function () {
+var MTDService = /** @class */ (function () {
     function MTDService(storage) {
         this.storage = storage;
         this.bookmarks = new __WEBPACK_IMPORTED_MODULE_2_rxjs_BehaviorSubject__["BehaviorSubject"]([]);
@@ -1424,7 +1424,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 
 
-var Random = (function () {
+var Random = /** @class */ (function () {
     function Random(navCtrl) {
         this.navCtrl = navCtrl;
     }
@@ -1464,7 +1464,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 
 
 
-var Search = (function () {
+var Search = /** @class */ (function () {
     function Search(navCtrl) {
         this.navCtrl = navCtrl;
         this.entries = __WEBPACK_IMPORTED_MODULE_2__app_global__["a" /* MTDInfo */].allEntries;
@@ -1545,7 +1545,7 @@ var Search = (function () {
 
 "use strict";
 /* unused harmony export Entry */
-var Entry = (function () {
+var Entry = /** @class */ (function () {
     function Entry() {
     }
     return Entry;
@@ -1575,7 +1575,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 
 
 
-var EntryList = (function () {
+var EntryList = /** @class */ (function () {
     function EntryList(navCtrl, viewCtrl, modalCtrl) {
         this.navCtrl = navCtrl;
         this.viewCtrl = viewCtrl;
@@ -1641,7 +1641,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 
 
 
-var StoriesPage = (function () {
+var StoriesPage = /** @class */ (function () {
     function StoriesPage(navCtrl) {
         this.navCtrl = navCtrl;
         this.storyPage = __WEBPACK_IMPORTED_MODULE_2__story__["a" /* StoryPage */];
@@ -1754,7 +1754,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 };
 
 
-var PipesModule = (function () {
+var PipesModule = /** @class */ (function () {
     function PipesModule() {
     }
     PipesModule = __decorate([
@@ -1790,7 +1790,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
  *
  * See https://angular.io/api/core/Pipe for more info on Angular Pipes.
  */
-var NoNullValuesPipe = (function () {
+var NoNullValuesPipe = /** @class */ (function () {
     function NoNullValuesPipe() {
     }
     /**
@@ -1813,7 +1813,7 @@ var NoNullValuesPipe = (function () {
     return NoNullValuesPipe;
 }());
 
-var NoNullObjectValuesPipe = (function () {
+var NoNullObjectValuesPipe = /** @class */ (function () {
     function NoNullObjectValuesPipe() {
     }
     /**
